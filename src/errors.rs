@@ -12,6 +12,7 @@
 //
 // The original code was modified by Adrian Chan in order to port it to Rust.
 
+extern crate gfx;
 extern crate glfw;
 
 
@@ -20,5 +21,8 @@ error_chain! {
     // error-chain errors.
     foreign_links {
         GlfwInit(glfw::InitError);
+        Io(::std::io::Error);
+        ProgramError(gfx::shade::ProgramError);
+        CreateProgramError(gfx::shade::core::CreateProgramError);
     }
 }

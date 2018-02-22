@@ -28,6 +28,7 @@ extern crate glfw;
 mod errors;
 use errors::*;
 mod game;
+mod resource_manager;
 
 
 type EventQueue = ::std::sync::mpsc::Receiver<(f64, glfw::WindowEvent)>;
