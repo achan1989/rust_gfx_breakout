@@ -12,6 +12,10 @@
 //
 // The original code was modified by Adrian Chan in order to port it to Rust.
 
+// We use the error-chain crate to take care of a lot of the error handling
+// boilerplate.  Whenever we see Result<_>, it's the special version from
+// error-chain -- see errors.rs
+
 use std::collections::HashMap;
 
 #[macro_use]
@@ -22,6 +26,7 @@ extern crate gfx_window_glfw;
 extern crate glfw;
 
 mod errors;
+use errors::*;
 mod game;
 
 
@@ -50,7 +55,7 @@ struct Gfx<D: gfx::Device, F: gfx::traits::FactoryExt<R>, R: gfx::Resources> {
     factory: F,
 }
 
-fn run() -> errors::Result<()> {
+fn run() -> Result<()> {
     let (events, mut glfw, mut window, mut gfx) = setup_gl_window_and_gfx()?;
     let (fb_width, fb_height) = window.get_framebuffer_size();
     let mut keys: KeyMap = KeyMap::with_capacity(NUM_KEYS);
@@ -115,7 +120,7 @@ fn process_events(glfw: &mut glfw::Glfw, events: &EventQueue,
 // This creates our window, event, and graphics objects, using a specific
 // window/event system (GLFW) and backend (OpenGL).
 fn setup_gl_window_and_gfx()
-    -> errors::Result<(
+    -> Result<(
         EventQueue,
         glfw::Glfw,
         glfw::Window,

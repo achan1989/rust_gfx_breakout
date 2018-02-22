@@ -16,6 +16,8 @@ extern crate glfw;
 
 
 error_chain! {
+    // Declare that we want to convert these non-error-chain errors into
+    // error-chain errors.
     foreign_links {
         GlfwInit(glfw::InitError);
     }
