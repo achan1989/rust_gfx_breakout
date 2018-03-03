@@ -29,13 +29,16 @@ use std::path::Path;
 
 extern crate gfx;
 use gfx::handle;
+extern crate image;
 
 use errors::*;
+use texture;
 
 
 pub struct ResourceManager<F: gfx::traits::FactoryExt<R>, R: gfx::Resources> {
     factory: F,
     shaders: HashMap<String, handle::Program<R>>,
+    textures: HashMap<String, texture::Texture2D<R>>,
 }
 
 impl<F: gfx::traits::FactoryExt<R>, R: gfx::Resources> ResourceManager<F, R> {
@@ -43,6 +46,7 @@ impl<F: gfx::traits::FactoryExt<R>, R: gfx::Resources> ResourceManager<F, R> {
         Self {
             factory,
             shaders: HashMap::with_capacity(10),
+            textures: HashMap::with_capacity(10),
         }
     }
 
@@ -58,7 +62,21 @@ impl<F: gfx::traits::FactoryExt<R>, R: gfx::Resources> ResourceManager<F, R> {
         Ok(program)
     }
 
-    pub fn load_shader_from_file<P: AsRef<Path>>(
+    // We've abandoned the "alpha" option. If an image has no alpha channel we
+    // just create one with all alpha = opaque.
+    // It makes our pipeline simpler if all textures have an alpha channel,
+    // and there's no need to try and save memory in such a small game.
+    // We also don't need to return the texture to the caller.
+    pub fn load_texture<P: AsRef<Path>>(
+        &mut self, path: &P, name: String)
+        -> Result<()>
+    {
+        let texture = self.load_texture_from_file(path.as_ref())?;
+        self.textures.insert(name, texture);
+        Ok(())
+    }
+
+    fn load_shader_from_file<P: AsRef<Path>>(
         &mut self,
         v_shader_path: &P, p_shader_path: &P, g_shader_path: Option<&P>)
         -> Result<handle::Program<R>>
@@ -80,6 +98,14 @@ impl<F: gfx::traits::FactoryExt<R>, R: gfx::Resources> ResourceManager<F, R> {
 
         Ok(self.factory.create_program(&shader_set)?)
     }
+
+    fn load_texture_from_file(
+        &mut self, path: &Path)
+        -> Result<texture::Texture2D<R>>
+    {
+        let img = load_image(path)?;
+        texture::Texture2D::new(img, &mut self.factory)
+    }
 }
 
 fn read_code<P: AsRef<Path>>(path: &P) -> Result<Vec<u8>> {
@@ -92,4 +118,18 @@ fn read_code<P: AsRef<Path>>(path: &P) -> Result<Vec<u8>> {
     let mut data = Vec::with_capacity(size);
     reader.read_to_end(&mut data)?;
     Ok(data)
+}
+
+type Width = u32;
+type Height = u32;
+
+fn load_image(path: &Path)
+    -> Result<image::RgbaImage>
+{
+    let img_kind = image::open(path)?;
+    let img = match img_kind {
+        image::DynamicImage::ImageRgba8(img) => img,
+        _ => img_kind.to_rgba()
+    };
+    Ok(img)
 }

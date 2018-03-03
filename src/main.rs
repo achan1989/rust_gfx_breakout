@@ -29,6 +29,7 @@ mod errors;
 use errors::*;
 mod game;
 mod resource_manager;
+mod texture;
 
 
 type EventQueue = ::std::sync::mpsc::Receiver<(f64, glfw::WindowEvent)>;

@@ -14,15 +14,18 @@
 
 extern crate gfx;
 extern crate glfw;
+extern crate image;
 
 
 error_chain! {
     // Declare that we want to convert these non-error-chain errors into
     // error-chain errors.
     foreign_links {
+        CombinedError(gfx::CombinedError);
+        CreateProgramError(gfx::shade::core::CreateProgramError);
         GlfwInit(glfw::InitError);
+        ImageError(image::ImageError);
         Io(::std::io::Error);
         ProgramError(gfx::shade::ProgramError);
-        CreateProgramError(gfx::shade::core::CreateProgramError);
     }
 }
