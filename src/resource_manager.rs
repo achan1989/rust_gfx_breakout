@@ -28,7 +28,6 @@ use std::collections::HashMap;
 use std::path::Path;
 
 extern crate gfx;
-use gfx::handle;
 extern crate image;
 
 use errors::*;
@@ -37,7 +36,7 @@ use texture;
 
 pub struct ResourceManager<F: gfx::traits::FactoryExt<R>, R: gfx::Resources> {
     factory: F,
-    shaders: HashMap<String, handle::Program<R>>,
+    shaders: HashMap<String, gfx::handle::Program<R>>,
     textures: HashMap<String, texture::Texture2D<R>>,
 }
 
@@ -54,7 +53,7 @@ impl<F: gfx::traits::FactoryExt<R>, R: gfx::Resources> ResourceManager<F, R> {
         &mut self,
         v_shader_path: &P, p_shader_path: &P, g_shader_path: Option<&P>,
         name: String)
-        -> Result<handle::Program<R>>
+        -> Result<gfx::handle::Program<R>>
     {
         let program = self.load_shader_from_file(
             v_shader_path, p_shader_path, g_shader_path)?;
@@ -79,7 +78,7 @@ impl<F: gfx::traits::FactoryExt<R>, R: gfx::Resources> ResourceManager<F, R> {
     fn load_shader_from_file<P: AsRef<Path>>(
         &mut self,
         v_shader_path: &P, p_shader_path: &P, g_shader_path: Option<&P>)
-        -> Result<handle::Program<R>>
+        -> Result<gfx::handle::Program<R>>
     {
         let vs_code = read_code(v_shader_path)?;
         let ps_code = read_code(p_shader_path)?;

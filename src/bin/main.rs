@@ -25,11 +25,8 @@ extern crate gfx_device_gl;
 extern crate gfx_window_glfw;
 extern crate glfw;
 
-mod errors;
-use errors::*;
-mod game;
-mod resource_manager;
-mod texture;
+extern crate rust_gfx_breakout as breakout;
+use breakout::errors::*;
 
 
 type EventQueue = ::std::sync::mpsc::Receiver<(f64, glfw::WindowEvent)>;
@@ -65,7 +62,7 @@ fn run() -> Result<()> {
     // TODO: set viewport.
 
     // Initialize game
-    let mut breakout = game::Game::new(fb_width, fb_height);
+    let mut breakout = breakout::Game::new(fb_width, fb_height);
 
     let mut delta_time = 0.0;
     let mut last_frame = 0.0;
