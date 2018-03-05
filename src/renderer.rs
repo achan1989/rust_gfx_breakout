@@ -19,6 +19,10 @@ use errors::*;
 use texture;
 
 
+// Could these be generic, or does the renderer have to make some assumptions
+// about the colour format?  I've made that assumption anyway, and have
+// accepted tighter coupling with the backend/windowing system.
+// These types are also duplicated in main.rs :(
 pub type ColourFormat = gfx::format::Rgba8;
 pub type RenderTargetView<R: gfx::Resources> =
     gfx::handle::RenderTargetView<R, ColourFormat>;

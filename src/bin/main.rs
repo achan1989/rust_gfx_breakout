@@ -47,10 +47,11 @@ type KeyMap = HashMap<glfw::Key, bool>;
 
 // Let's bundle the graphics-related stuff together.
 // This is also generic, and should work with any backend.
-struct Gfx<D: gfx::Device, F: gfx::traits::FactoryExt<R>, R: gfx::Resources> {
+struct Gfx<C: gfx::CommandBuffer<R>, D: gfx::Device, F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> {
     colour_view: RenderTargetView<R>,
     depth_view: DepthStencilView<R>,
     device: D,
+    encoder: gfx::Encoder<R, C>,
     factory: F,
 }
 
@@ -62,7 +63,8 @@ fn run() -> Result<()> {
     // TODO: set viewport.
 
     // Initialize game
-    let mut breakout = breakout::Game::new(fb_width, fb_height);
+    let mut breakout = breakout::Game::new(
+        fb_width, fb_height, gfx.factory.clone(), gfx.colour_view.clone())?;
 
     let mut delta_time = 0.0;
     let mut last_frame = 0.0;
@@ -78,7 +80,12 @@ fn run() -> Result<()> {
 
         breakout.process_input(delta_time);
         breakout.update(delta_time);
-        breakout.render();
+
+        gfx.encoder.clear(&gfx.colour_view, [0.0, 0.0, 0.0, 1.0]);
+        // Depth buffer is not actually used, but if it were...
+        gfx.encoder.clear_depth(&gfx.depth_view, 1.0);
+        breakout.render(&mut gfx.encoder);
+        gfx.encoder.flush(&mut gfx.device);
 
         {
             use glfw::Context;
@@ -123,7 +130,8 @@ fn setup_gl_window_and_gfx()
         EventQueue,
         glfw::Glfw,
         glfw::Window,
-        Gfx<gfx_device_gl::Device,
+        Gfx<gfx_device_gl::CommandBuffer,
+            gfx_device_gl::Device,
             gfx_device_gl::Factory,
             gfx_device_gl::Resources>)>
 {
@@ -134,6 +142,8 @@ fn setup_gl_window_and_gfx()
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS)?;
     glfw.window_hint(WindowHint::ContextVersion(3, 3));
     glfw.window_hint(WindowHint::OpenGlForwardCompat(true));
+    // glfw.window_hint(WindowHint::OpenGlDebugContext(true));
+    // glfw.window_hint(WindowHint::ContextNoError(false));
     glfw.window_hint(WindowHint::OpenGlProfile(OpenGlProfileHint::Core));
     glfw.window_hint(WindowHint::DoubleBuffer(true));
     glfw.window_hint(WindowHint::Resizable(false));
@@ -145,12 +155,14 @@ fn setup_gl_window_and_gfx()
 
     window.set_key_polling(true);
 
-    let (device, factory, colour_view, depth_view) =
+    let (device, mut factory, colour_view, depth_view) =
         gfx_window_glfw::init(&mut window);
+    let encoder = factory.create_command_buffer().into();
     let gfx = Gfx {
         colour_view,
         depth_view,
         device,
+        encoder,
         factory,
     };
 
