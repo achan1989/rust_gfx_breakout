@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["achan1989 <achan1989@gmail.com>"]
 
 [dependencies]
+cgmath = "^0.16"
 error-chain = "^0.11"
 gfx = "^0.17"
 gfx_device_gl = "^0.15"
