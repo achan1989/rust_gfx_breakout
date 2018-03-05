@@ -61,6 +61,10 @@ impl<F: gfx::traits::FactoryExt<R>, R: gfx::Resources> ResourceManager<F, R> {
         Ok(program)
     }
 
+    pub fn shader(&self, name: &str) -> Option<&gfx::handle::Program<R>> {
+        self.shaders.get(name)
+    }
+
     // We've abandoned the "alpha" option. If an image has no alpha channel we
     // just create one with all alpha = opaque.
     // It makes our pipeline simpler if all textures have an alpha channel,
@@ -73,6 +77,10 @@ impl<F: gfx::traits::FactoryExt<R>, R: gfx::Resources> ResourceManager<F, R> {
         let texture = self.load_texture_from_file(path.as_ref())?;
         self.textures.insert(name, texture);
         Ok(())
+    }
+
+    pub fn texture(&self, name: &str) -> Option<&texture::Texture2D<R>> {
+        self.textures.get(name)
     }
 
     fn load_shader_from_file<P: AsRef<Path>>(

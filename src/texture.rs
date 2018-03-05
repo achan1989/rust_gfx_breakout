@@ -30,8 +30,8 @@ pub type SrvType = [f32; 4];
 pub struct Texture2D<R>
     where R: gfx::Resources
 {
-    surface: gfx::handle::Texture<R, TextureSurface>,
-    view: gfx::handle::ShaderResourceView<R, SrvType>,
+    pub surface: gfx::handle::Texture<R, TextureSurface>,
+    pub view: gfx::handle::ShaderResourceView<R, SrvType>,
 }
 
 impl<R> Texture2D<R>
