@@ -27,6 +27,7 @@ pub type SrvType = [f32; 4];
 //   * Textures always have an alpha channel.
 //   * Texture wrapping and filter mode options have been removed (they were
 //     always the same anyway).
+#[derive(Clone)]
 pub struct Texture2D<R>
     where R: gfx::Resources
 {

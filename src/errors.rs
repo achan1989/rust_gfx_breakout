@@ -26,6 +26,7 @@ error_chain! {
         GlfwInit(glfw::InitError);
         ImageError(image::ImageError);
         Io(::std::io::Error);
+        ParseIntError(::std::num::ParseIntError);
         PipelineStateError(gfx::PipelineStateError<String>);
         ProgramError(gfx::shade::ProgramError);
     }
