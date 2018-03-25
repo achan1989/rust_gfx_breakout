@@ -66,7 +66,7 @@ fn run() -> Result<()> {
     let mut breakout = breakout::Game::new(
         fb_width, fb_height, gfx.factory.clone(), gfx.colour_view.clone())?;
 
-    let mut delta_time = 0.0;
+    let mut delta_time;
     let mut last_frame = 0.0;
 
     while !window.should_close() {
