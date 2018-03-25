@@ -20,7 +20,7 @@ extern crate glfw;
 
 use errors::*;
 use game_level::GameLevel;
-use game_object::GameObject;
+use game_object::{BallObject, GameObject};
 use renderer;
 use resource_manager::ResourceManager;
 
@@ -41,6 +41,7 @@ pub struct Game <F: gfx::traits::FactoryExt<R>, R: gfx::Resources> {
     levels: Vec<GameLevel<R>>,
     level: usize,
     player: GameObject<R>,
+    ball: BallObject<R>,
 }
 
 pub enum GameState {
@@ -111,6 +112,16 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
             resources.texture("paddle").unwrap(),
             base_colour!());
 
+        const BALL_RADIUS: f32 = 12.5;
+        let initial_ball_velocity = cgmath::vec2(100.0, -350.0);
+        let ball_pos = player_pos + cgmath::vec2(
+            player_size.x / 2.0 - BALL_RADIUS,
+            -BALL_RADIUS * 2.0);
+        let ball = BallObject::new(
+            ball_pos, BALL_RADIUS, initial_ball_velocity,
+            resources.texture("face").unwrap(),
+            base_colour!());
+
         Ok(Self {
             height: fb_height,
             width: fb_width,
@@ -121,6 +132,7 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
             levels,
             level: 1,
             player,
+            ball,
         })
     }
 
@@ -131,6 +143,8 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
             const PLAYER_VELOCITY: f32 = 500.0;
             let velocity = PLAYER_VELOCITY * delta_time;
 
+            // Movement.
+            let old_x = self.player.position.x;
             if *keys.get(&glfw::Key::A).unwrap_or(&false) {
                 self.player.position.x -= velocity;
                 if self.player.position.x < 0.0 {
@@ -143,11 +157,21 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
                     self.player.position.x = self.width as f32 - self.player.size.x;
                 }
             }
+
+            if self.ball.is_stuck() {
+                let dx = self.player.position.x - old_x;
+                self.ball.move_with_paddle(dx);
+            }
+
+            // Release ball.
+            if *keys.get(&glfw::Key::Space).unwrap_or(&false) {
+                self.ball.release();
+            }
         }
     }
 
     pub fn update(&mut self, delta_time: f32) {
-        // todo
+        self.ball.do_move(delta_time, self.width as f32);
     }
 
     pub fn render<C: gfx::CommandBuffer<R>>(
@@ -167,6 +191,7 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
                 &mut self.sprite_renderer, encoder);
 
             self.player.draw(&mut self.sprite_renderer, encoder);
+            self.ball.draw(&mut self.sprite_renderer, encoder);
         }
     }
 }

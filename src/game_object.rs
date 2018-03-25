@@ -65,3 +65,70 @@ impl <R: gfx::Resources> GameObject<R> {
             encoder);
     }
 }
+
+
+pub struct BallObject<R: gfx::Resources> {
+    obj: GameObject<R>,
+    radius: f32,
+    stuck: bool,
+}
+
+impl <R: gfx::Resources> BallObject<R> {
+    pub fn new(
+        position: cgmath::Vector2<f32>, radius: f32,
+        velocity: cgmath::Vector2<f32>,
+        sprite: &texture::Texture2D<R>,
+        colour: cgmath::Vector3<f32>)
+    -> Self
+    {
+        use self::cgmath::vec2;
+
+        let mut obj = GameObject::new(
+            position, vec2(radius * 2.0, radius * 2.0),
+            sprite, colour);
+        obj.velocity = velocity;
+        Self {
+            obj,
+            radius,
+            stuck: true,
+        }
+    }
+
+    pub fn do_move(&mut self, delta_time: f32, window_width: f32) {
+        if !self.stuck {
+            self.obj.position += self.obj.velocity * delta_time;
+            if self.obj.position.x <= 0.0 {
+                self.obj.velocity.x = -self.obj.velocity.x;
+                self.obj.position.x = 0.0;
+            }
+            else if self.obj.position.x + self.obj.size.x >= window_width {
+                self.obj.velocity.x = -self.obj.velocity.x;
+                self.obj.position.x = window_width - self.obj.size.x;
+            }
+            if self.obj.position.y <= 0.0 {
+                self.obj.velocity.y = -self.obj.velocity.y;
+                self.obj.position.y = 0.0;
+            }
+        }
+    }
+
+    pub fn is_stuck(&self) -> bool {
+        self.stuck
+    }
+
+    pub fn release(&mut self) {
+        self.stuck = false;
+    }
+
+    pub fn move_with_paddle(&mut self, dx: f32) {
+        self.obj.position.x += dx;
+    }
+
+    pub fn draw<C: gfx::CommandBuffer<R>>(
+        &self,
+        renderer: &mut renderer::SpriteRenderer<R>,
+        encoder: &mut gfx::Encoder<R, C>)
+    {
+        self.obj.draw(renderer, encoder);
+    }
+}
