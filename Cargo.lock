@@ -503,6 +503,7 @@ dependencies = [
  "gfx_window_glfw 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "glfw 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.18.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-traits 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

@@ -11,3 +11,4 @@ gfx_device_gl = "^0.15"
 gfx_window_glfw = "^0.16"
 glfw = { version = "^0.20", features = ["image"] }
 image = "^0.18"
+num-traits = "^0.2"

@@ -172,6 +172,19 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
 
     pub fn update(&mut self, delta_time: f32) {
         self.ball.do_move(delta_time, self.width as f32);
+        self.do_collisions();
+    }
+
+    fn do_collisions(&mut self) {
+        for brick in self.levels[self.level - 1].bricks_iter_mut() {
+            if !brick.is_destroyed {
+                if self.ball.check_collision(brick) {
+                    if !brick.is_solid {
+                        brick.is_destroyed = true;
+                    }
+                }
+            }
+        }
     }
 
     pub fn render<C: gfx::CommandBuffer<R>>(

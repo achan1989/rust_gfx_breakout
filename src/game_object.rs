@@ -14,6 +14,7 @@
 
 extern crate cgmath;
 extern crate gfx;
+extern crate num_traits;
 
 use renderer;
 use texture;
@@ -130,5 +131,28 @@ impl <R: gfx::Resources> BallObject<R> {
         encoder: &mut gfx::Encoder<R, C>)
     {
         self.obj.draw(renderer, encoder);
+    }
+
+    pub fn check_collision(&self, other: &GameObject<R>) -> bool
+    {
+        use self::cgmath::{ElementWise, MetricSpace};
+        use self::cgmath::vec2;
+        use self::num_traits::clamp;
+
+        let center = self.obj.position.add_element_wise(self.radius);
+        // AABB info.
+        let aabb_half_extents = other.size / 2.0;
+        let aabb_center = other.position + aabb_half_extents;
+        // Get difference vector between both centers.
+        let diff = center - aabb_center;
+        let clamped = vec2(
+            clamp(diff.x, -aabb_half_extents.x, aabb_half_extents.x),
+            clamp(diff.y, -aabb_half_extents.y, aabb_half_extents.y));
+        // Add clamped value to AABB_center and we get the value of box closest
+        // to circle.
+        let closest = aabb_center + clamped;
+        // Retrieve vector between center circle and closest point AABB and check
+        // if length <= radius.
+        closest.distance(center) < self.radius
     }
 }

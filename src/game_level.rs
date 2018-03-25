@@ -152,6 +152,10 @@ impl <R: gfx::Resources> GameLevel<R> {
         }
     }
 
+    pub fn bricks_iter_mut(&mut self) -> ::std::slice::IterMut<GameObject<R>> {
+        self.bricks.iter_mut()
+    }
+
     fn read_tile_data(path: &Path) -> Result<Vec<Vec<TileKind>>> {
         use std::io::BufRead;
         let mut tile_data = Vec::with_capacity(10);
