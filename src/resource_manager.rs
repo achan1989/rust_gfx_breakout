@@ -127,9 +127,6 @@ fn read_code<P: AsRef<Path>>(path: &P) -> Result<Vec<u8>> {
     Ok(data)
 }
 
-type Width = u32;
-type Height = u32;
-
 fn load_image(path: &Path)
     -> Result<image::RgbaImage>
 {

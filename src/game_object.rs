@@ -15,6 +15,7 @@
 extern crate cgmath;
 extern crate gfx;
 
+use renderer;
 use texture;
 
 
@@ -48,5 +49,19 @@ impl <R: gfx::Resources> GameObject<R> {
             is_destroyed: false,
             sprite: sprite.clone(),
         }
+    }
+
+    pub fn draw<C: gfx::CommandBuffer<R>>(
+        &self,
+        renderer: &mut renderer::SpriteRenderer<R>,
+        encoder: &mut gfx::Encoder<R, C>)
+    {
+        renderer.draw_sprite(
+            &self.sprite,
+            self.position,
+            self.size,
+            self.rotation,
+            self.colour,
+            encoder);
     }
 }

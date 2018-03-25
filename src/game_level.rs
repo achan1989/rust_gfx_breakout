@@ -21,6 +21,7 @@ extern crate gfx;
 
 use errors::*;
 use game_object::GameObject;
+use renderer;
 use resource_manager::ResourceManager;
 
 
@@ -139,6 +140,16 @@ impl <R: gfx::Resources> GameLevel<R> {
 
     pub fn is_completed(&self) -> bool {
         self.bricks.iter().all(|b| b.is_solid || b.is_destroyed )
+    }
+
+    pub fn draw<C: gfx::CommandBuffer<R>>(
+        &self,
+        renderer: &mut renderer::SpriteRenderer<R>,
+        encoder: &mut gfx::Encoder<R, C>)
+    {
+        for tile in self.bricks.iter().filter(|t| !t.is_destroyed) {
+            tile.draw(renderer, encoder);
+        }
     }
 
     fn read_tile_data(path: &Path) -> Result<Vec<Vec<TileKind>>> {

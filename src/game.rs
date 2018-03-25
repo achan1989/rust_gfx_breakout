@@ -16,6 +16,7 @@ extern crate cgmath;
 extern crate gfx;
 
 use errors::*;
+use game_level::GameLevel;
 use renderer;
 use resource_manager::ResourceManager;
 
@@ -27,6 +28,8 @@ pub struct Game <F: gfx::traits::FactoryExt<R>, R: gfx::Resources> {
     projection: cgmath::Matrix4<f32>,
     resources: ResourceManager<F, R>,
     sprite_renderer: renderer::SpriteRenderer<R>,
+    levels: Vec<GameLevel<R>>,
+    level: usize,
 }
 
 pub enum GameState {
@@ -45,9 +48,19 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
         resources.load_shader(
             &"assets/shaders/sprite.vs", &"assets/shaders/sprite.fs", None,
             "sprite".into())?;
+        // Textures.
         resources.load_texture(
             &"assets/textures/awesomeface.png",
             "face".into())?;
+        resources.load_texture(
+            &"assets/textures/background.jpg",
+            "background".into())?;
+        resources.load_texture(
+            &"assets/textures/block.png",
+            "block".into())?;
+        resources.load_texture(
+            &"assets/textures/block_solid.png",
+            "block_solid".into())?;
 
         // left, right, bottom, top, near, far.
         // Note that bottom and top are "backwards", with y increasing down
@@ -63,6 +76,18 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
             &mut factory,
             fb.clone())?;
 
+        let level_data = [
+            "assets/levels/one.lvl",
+            "assets/levels/two.lvl",
+            "assets/levels/three.lvl",
+            "assets/levels/four.lvl",];
+        let mut levels = Vec::with_capacity(level_data.len());
+        for level in level_data.iter() {
+            let lvl = GameLevel::new(
+                level, fb_width as u32, (fb_height / 2) as u32, &resources)?;
+            levels.push(lvl);
+        }
+
         Ok(Self {
             height: fb_height,
             width: fb_width,
@@ -70,6 +95,8 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
             projection,
             resources,
             sprite_renderer,
+            levels,
+            level: 1,
         })
     }
 
@@ -84,16 +111,18 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
     pub fn render<C: gfx::CommandBuffer<R>>(
         &mut self, encoder: &mut gfx::Encoder<R, C>)
     {
-        // For some reason the face sprite is displayed with a white border.
-        // I think this is some kind of encoding error in the image, since
-        // replacing the image with something else makes the white border go
-        // away...
-        self.sprite_renderer.draw_sprite(
-            self.resources.texture("face").unwrap(),
-            cgmath::vec2(200.0, 200.0),
-            cgmath::vec2(300.0, 400.0),
-            45.0,
-            cgmath::vec3(0.0, 1.0, 0.0),
-            encoder);
+        if let GameState::Active = self.state
+        {
+            self.sprite_renderer.draw_sprite(
+                self.resources.texture("background").unwrap(),
+                cgmath::vec2(0.0, 0.0),
+                cgmath::vec2(self.width as f32, self.height as f32),
+                0.0,
+                cgmath::vec3(1.0, 1.0, 1.0),
+                encoder);
+
+            self.levels[self.level - 1].draw(
+                &mut self.sprite_renderer, encoder);
+        }
     }
 }
