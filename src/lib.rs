@@ -3,6 +3,7 @@ extern crate error_chain;
 #[macro_use]
 extern crate gfx;
 
+pub mod collision;
 pub mod errors;
 pub mod game;
 pub use self::game::Game;

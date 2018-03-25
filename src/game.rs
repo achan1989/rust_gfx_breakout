@@ -18,8 +18,10 @@ extern crate cgmath;
 extern crate gfx;
 extern crate glfw;
 
+use collision::Collision;
 use errors::*;
 use game_level::GameLevel;
+use game_object;
 use game_object::{BallObject, GameObject};
 use renderer;
 use resource_manager::ResourceManager;
@@ -103,7 +105,7 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
             levels.push(lvl);
         }
 
-        let player_size: cgmath::Vector2<f32> = cgmath::vec2(100.0, 20.0);
+        let player_size = game_object::initial_player_size();
         let player_pos = cgmath::vec2(
             (fb_width as f32 / 2.0) - (player_size.x / 2.0),
             fb_height as f32 - player_size.y);
@@ -112,13 +114,13 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
             resources.texture("paddle").unwrap(),
             base_colour!());
 
-        const BALL_RADIUS: f32 = 12.5;
-        let initial_ball_velocity = cgmath::vec2(100.0, -350.0);
+        let ball_radius = <BallObject<R>>::initial_radius();
+        let initial_ball_velocity = <BallObject<R>>::initial_velocity();
         let ball_pos = player_pos + cgmath::vec2(
-            player_size.x / 2.0 - BALL_RADIUS,
-            -BALL_RADIUS * 2.0);
+            player_size.x / 2.0 - ball_radius,
+            -ball_radius * 2.0);
         let ball = BallObject::new(
-            ball_pos, BALL_RADIUS, initial_ball_velocity,
+            ball_pos, ball_radius, initial_ball_velocity,
             resources.texture("face").unwrap(),
             base_colour!());
 
@@ -173,16 +175,51 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
     pub fn update(&mut self, delta_time: f32) {
         self.ball.do_move(delta_time, self.width as f32);
         self.do_collisions();
+        if self.ball.is_below(self.height as f32) {
+            self.reset_level();
+            self.reset_player();
+        }
+    }
+
+    fn reset_level(&mut self) {
+        self.levels[self.level - 1].reset();
+    }
+
+    fn reset_player(&mut self) {
+        use self::cgmath::vec2;
+
+        let player_size = game_object::initial_player_size();
+        self.player.size = player_size;
+        self.player.position = vec2(
+            (self.width as f32 / 2.0) - (player_size.x / 2.0),
+            self.height as f32 - player_size.y);
+
+        let ball_radius = <BallObject<R>>::initial_radius();
+        self.ball.reset(
+            self.player.position + vec2(
+                (player_size.x / 2.0) - ball_radius, -(ball_radius * 2.0)),
+            <BallObject<R>>::initial_velocity());
     }
 
     fn do_collisions(&mut self) {
         for brick in self.levels[self.level - 1].bricks_iter_mut() {
             if !brick.is_destroyed {
-                if self.ball.check_collision(brick) {
+                if let Collision::Yes(direction, penetration) =
+                       self.ball.check_collision(brick)
+               {
                     if !brick.is_solid {
                         brick.is_destroyed = true;
                     }
+                    self.ball.rebound_brick(direction, penetration);
                 }
+            }
+        }
+
+        if !self.ball.is_stuck() {
+            if let Collision::Yes(_, _) =
+                   self.ball.check_collision(&self.player)
+            {
+                self.ball.rebound_paddle(&self.player);
             }
         }
     }

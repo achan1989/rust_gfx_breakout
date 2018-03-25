@@ -88,6 +88,7 @@ impl TileKind {
 
 pub struct GameLevel<R: gfx::Resources> {
     bricks: Vec<GameObject<R>>,
+    bricks_original: Vec<GameObject<R>>,
 }
 
 impl <R: gfx::Resources> GameLevel<R> {
@@ -134,7 +135,8 @@ impl <R: gfx::Resources> GameLevel<R> {
         }
 
         Ok(Self{
-            bricks,
+            bricks: bricks.clone(),
+            bricks_original: bricks,
         })
     }
 
@@ -154,6 +156,10 @@ impl <R: gfx::Resources> GameLevel<R> {
 
     pub fn bricks_iter_mut(&mut self) -> ::std::slice::IterMut<GameObject<R>> {
         self.bricks.iter_mut()
+    }
+
+    pub fn reset(&mut self) {
+        self.bricks = self.bricks_original.clone();
     }
 
     fn read_tile_data(path: &Path) -> Result<Vec<Vec<TileKind>>> {

@@ -16,10 +16,17 @@ extern crate cgmath;
 extern crate gfx;
 extern crate num_traits;
 
+use collision;
 use renderer;
 use texture;
 
 
+pub fn initial_player_size() -> cgmath::Vector2<f32> {
+    cgmath::vec2(100.0, 20.0)
+}
+
+
+#[derive(Clone)]
 pub struct GameObject<R: gfx::Resources> {
     pub position: cgmath::Vector2<f32>,
     pub size: cgmath::Vector2<f32>,
@@ -75,6 +82,14 @@ pub struct BallObject<R: gfx::Resources> {
 }
 
 impl <R: gfx::Resources> BallObject<R> {
+    pub fn initial_velocity() -> cgmath::Vector2<f32> {
+        cgmath::vec2(100.0, -350.0)
+    }
+
+    pub fn initial_radius() -> f32 {
+        12.5
+    }
+
     pub fn new(
         position: cgmath::Vector2<f32>, radius: f32,
         velocity: cgmath::Vector2<f32>,
@@ -93,6 +108,16 @@ impl <R: gfx::Resources> BallObject<R> {
             radius,
             stuck: true,
         }
+    }
+
+    pub fn reset(
+        &mut self,
+        position: cgmath::Vector2<f32>,
+        velocity: cgmath::Vector2<f32>)
+    {
+        self.obj.position = position;
+        self.obj.velocity = velocity;
+        self.stuck = true;
     }
 
     pub fn do_move(&mut self, delta_time: f32, window_width: f32) {
@@ -121,6 +146,10 @@ impl <R: gfx::Resources> BallObject<R> {
         self.stuck = false;
     }
 
+    pub fn is_below(&self, y: f32) -> bool {
+        self.obj.position.y > y
+    }
+
     pub fn move_with_paddle(&mut self, dx: f32) {
         self.obj.position.x += dx;
     }
@@ -133,10 +162,11 @@ impl <R: gfx::Resources> BallObject<R> {
         self.obj.draw(renderer, encoder);
     }
 
-    pub fn check_collision(&self, other: &GameObject<R>) -> bool
+    pub fn check_collision(&self, other: &GameObject<R>) -> collision::Collision
     {
-        use self::cgmath::{ElementWise, MetricSpace};
+        use self::cgmath::{ElementWise, InnerSpace};
         use self::cgmath::vec2;
+        use self::collision::{Collision, Direction};
         use self::num_traits::clamp;
 
         let center = self.obj.position.add_element_wise(self.radius);
@@ -144,15 +174,68 @@ impl <R: gfx::Resources> BallObject<R> {
         let aabb_half_extents = other.size / 2.0;
         let aabb_center = other.position + aabb_half_extents;
         // Get difference vector between both centers.
-        let diff = center - aabb_center;
+        let diff1 = center - aabb_center;
         let clamped = vec2(
-            clamp(diff.x, -aabb_half_extents.x, aabb_half_extents.x),
-            clamp(diff.y, -aabb_half_extents.y, aabb_half_extents.y));
+            clamp(diff1.x, -aabb_half_extents.x, aabb_half_extents.x),
+            clamp(diff1.y, -aabb_half_extents.y, aabb_half_extents.y));
         // Add clamped value to AABB_center and we get the value of box closest
         // to circle.
         let closest = aabb_center + clamped;
         // Retrieve vector between center circle and closest point AABB and check
         // if length <= radius.
-        closest.distance(center) < self.radius
+        let diff2 = closest - center;
+        if diff2.magnitude() <= self.radius {
+            let direction = Direction::nearest_from(&diff2);
+            Collision::Yes(direction, diff2)
+        }
+        else {
+            Collision::No
+        }
+    }
+
+    pub fn rebound_brick(
+        &mut self,
+        direction: collision::Direction,
+        difference: cgmath::Vector2<f32>)
+    {
+        use self::collision::Direction;
+
+        match direction {
+            Direction::Left | Direction::Right => {
+                self.obj.velocity.x = -self.obj.velocity.x;
+                let penetration = self.radius - difference.x.abs();
+                if let Direction::Left = direction {
+                    self.obj.position.x += penetration;
+                } else {
+                    self.obj.position.x -= penetration;
+                }
+            },
+            Direction::Up | Direction::Down => {
+                self.obj.velocity.y = -self.obj.velocity.y;
+                let penetration = self.radius - difference.y.abs();
+                if let Direction::Up = direction {
+                    self.obj.position.y -= penetration;
+                } else {
+                    self.obj.position.y += penetration;
+                }
+            }
+        }
+    }
+
+    pub fn rebound_paddle(&mut self, paddle: &GameObject<R>) {
+        use self::cgmath::InnerSpace;
+
+        // New ball velocity depends on distance from the center of the
+        // paddle.
+        let center = paddle.position.x + (paddle.size.x / 2.0);
+        let distance = (self.obj.position.x + self.radius) - center;
+        let percentage = distance / (paddle.size.x / 2.0);
+
+        const STRENGTH: f32 = 2.0;
+        // Overall speed is preserved.
+        let speed = self.obj.velocity.magnitude();
+        self.obj.velocity.x = Self::initial_velocity().x * percentage * STRENGTH;
+        self.obj.velocity.y = -1.0 * self.obj.velocity.y.abs();
+        self.obj.velocity = self.obj.velocity.normalize() * speed;
     }
 }
