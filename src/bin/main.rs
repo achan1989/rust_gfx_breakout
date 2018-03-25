@@ -78,7 +78,7 @@ fn run() -> Result<()> {
         last_frame = current_frame;
         process_events(&mut glfw, &events, &mut keys, &mut window);
 
-        breakout.process_input(delta_time);
+        breakout.process_input(delta_time, &keys);
         breakout.update(delta_time);
 
         gfx.encoder.clear(&gfx.colour_view, [0.0, 0.0, 0.0, 1.0]);

@@ -11,5 +11,8 @@ uniform Locals {
 
 void main()
 {
-    target = spriteColour * texture(image, TexCoords);
+    vec4 texColour = spriteColour * texture(image, TexCoords);
+    if (texColour.a < 0.1)
+        discard;
+    target = texColour;
 }

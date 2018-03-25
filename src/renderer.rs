@@ -165,6 +165,8 @@ gfx_defines! {
         sprite_sampler: gfx::TextureSampler<[f32; 4]> = "image",
         locals: gfx::ConstantBuffer<Locals> = "Locals",
         projection: gfx::Global<[[f32; 4]; 4]> = "projection",
+        // Use BlendTarget for any transparency that is more complicated than
+        // on/off.
         out: gfx::RenderTarget<ColourFormat> = "target",
     }
 }

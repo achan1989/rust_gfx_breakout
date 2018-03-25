@@ -12,13 +12,23 @@
 //
 // The original code was modified by Adrian Chan in order to port it to Rust.
 
+use std::collections::HashMap;
+
 extern crate cgmath;
 extern crate gfx;
+extern crate glfw;
 
 use errors::*;
 use game_level::GameLevel;
+use game_object::GameObject;
 use renderer;
 use resource_manager::ResourceManager;
+
+
+// Use the colour of the sprite as-in.
+macro_rules! base_colour {
+    () => { cgmath::vec3(1.0, 1.0, 1.0) }
+}
 
 
 pub struct Game <F: gfx::traits::FactoryExt<R>, R: gfx::Resources> {
@@ -30,6 +40,7 @@ pub struct Game <F: gfx::traits::FactoryExt<R>, R: gfx::Resources> {
     sprite_renderer: renderer::SpriteRenderer<R>,
     levels: Vec<GameLevel<R>>,
     level: usize,
+    player: GameObject<R>,
 }
 
 pub enum GameState {
@@ -61,6 +72,9 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
         resources.load_texture(
             &"assets/textures/block_solid.png",
             "block_solid".into())?;
+        resources.load_texture(
+            &"assets/textures/paddle.png",
+            "paddle".into())?;
 
         // left, right, bottom, top, near, far.
         // Note that bottom and top are "backwards", with y increasing down
@@ -88,6 +102,15 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
             levels.push(lvl);
         }
 
+        let player_size: cgmath::Vector2<f32> = cgmath::vec2(100.0, 20.0);
+        let player_pos = cgmath::vec2(
+            (fb_width as f32 / 2.0) - (player_size.x / 2.0),
+            fb_height as f32 - player_size.y);
+        let player = GameObject::new(
+            player_pos, player_size,
+            resources.texture("paddle").unwrap(),
+            base_colour!());
+
         Ok(Self {
             height: fb_height,
             width: fb_width,
@@ -97,11 +120,30 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
             sprite_renderer,
             levels,
             level: 1,
+            player,
         })
     }
 
-    pub fn process_input(&mut self, delta_time: f32) {
-        // todo
+    pub fn process_input(
+        &mut self, delta_time: f32, keys: &HashMap<glfw::Key, bool>)
+    {
+        if let GameState::Active = self.state {
+            const PLAYER_VELOCITY: f32 = 500.0;
+            let velocity = PLAYER_VELOCITY * delta_time;
+
+            if *keys.get(&glfw::Key::A).unwrap_or(&false) {
+                self.player.position.x -= velocity;
+                if self.player.position.x < 0.0 {
+                    self.player.position.x = 0.0;
+                }
+            }
+            if *keys.get(&glfw::Key::D).unwrap_or(&false) {
+                self.player.position.x += velocity;
+                if self.player.position.x + self.player.size.x > self.width as f32 {
+                    self.player.position.x = self.width as f32 - self.player.size.x;
+                }
+            }
+        }
     }
 
     pub fn update(&mut self, delta_time: f32) {
@@ -118,11 +160,13 @@ impl<F: gfx::traits::FactoryExt<R> + Clone, R: gfx::Resources> Game<F, R> {
                 cgmath::vec2(0.0, 0.0),
                 cgmath::vec2(self.width as f32, self.height as f32),
                 0.0,
-                cgmath::vec3(1.0, 1.0, 1.0),
+                base_colour!(),
                 encoder);
 
             self.levels[self.level - 1].draw(
                 &mut self.sprite_renderer, encoder);
+
+            self.player.draw(&mut self.sprite_renderer, encoder);
         }
     }
 }
