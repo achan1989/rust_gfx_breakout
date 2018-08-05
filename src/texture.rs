@@ -12,8 +12,8 @@
 //
 // The original code was modified by Adrian Chan in order to port it to Rust.
 
-extern crate gfx;
-extern crate image;
+use gfx;
+use image;
 
 use errors::*;
 

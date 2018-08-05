@@ -12,9 +12,9 @@
 //
 // The original code was modified by Adrian Chan in order to port it to Rust.
 
-extern crate gfx;
-extern crate glfw;
-extern crate image;
+use gfx;
+use glfw;
+use image;
 
 
 error_chain! {

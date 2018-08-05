@@ -27,8 +27,8 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-extern crate gfx;
-extern crate image;
+use gfx;
+use image;
 
 use errors::*;
 use texture;

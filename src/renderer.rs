@@ -12,8 +12,9 @@
 //
 // The original code was modified by Adrian Chan in order to port it to Rust.
 
-extern crate cgmath;
-extern crate gfx;
+use cgmath;
+use gfx;
+use image;
 
 use errors::*;
 use texture;
@@ -77,7 +78,6 @@ impl <R: gfx::Resources> SpriteRenderer <R> {
                 gfx::texture::FilterMethod::Bilinear,
                 gfx::texture::WrapMode::Tile));
         let default_texture = {
-            extern crate image;
             let pixel = image::Rgba { data: [255, 0, 255, 255] };
             let img = image::RgbaImage::from_pixel(1, 1, pixel);
             texture::Texture2D::new(img, factory)?

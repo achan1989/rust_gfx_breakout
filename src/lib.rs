@@ -1,7 +1,11 @@
+extern crate cgmath;
 #[macro_use]
 extern crate error_chain;
 #[macro_use]
 extern crate gfx;
+extern crate glfw;
+extern crate image;
+extern crate num_traits;
 
 pub mod collision;
 pub mod errors;

@@ -14,9 +14,9 @@
 
 use std::collections::HashMap;
 
-extern crate cgmath;
-extern crate gfx;
-extern crate glfw;
+use cgmath;
+use gfx;
+use glfw;
 
 use collision::Collision;
 use errors::*;

@@ -16,8 +16,8 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-extern crate cgmath;
-extern crate gfx;
+use cgmath;
+use gfx;
 
 use errors::*;
 use game_object::GameObject;

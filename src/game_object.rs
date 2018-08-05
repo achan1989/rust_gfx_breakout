@@ -12,9 +12,9 @@
 //
 // The original code was modified by Adrian Chan in order to port it to Rust.
 
-extern crate cgmath;
-extern crate gfx;
-extern crate num_traits;
+use cgmath;
+use gfx;
+use num_traits;
 
 use collision;
 use renderer;

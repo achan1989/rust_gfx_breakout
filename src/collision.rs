@@ -12,7 +12,7 @@
 //
 // The original code was modified by Adrian Chan in order to port it to Rust.
 
-extern crate cgmath;
+use cgmath;
 
 
 type Difference = cgmath::Vector2<f32>;
@@ -32,7 +32,7 @@ pub enum Direction {
 
 impl Direction {
     fn vec(&self) -> cgmath::Vector2<f32> {
-        use self::cgmath::vec2;
+        use cgmath::vec2;
 
         match *self {
             Direction::Up => vec2(0.0, 1.0),
@@ -43,7 +43,7 @@ impl Direction {
     }
 
     pub fn nearest_from(target: &cgmath::Vector2<f32>) -> Self {
-        use self::cgmath::InnerSpace;
+        use cgmath::InnerSpace;
 
         const COMPASS: [Direction; 4] = [
             Direction::Up, Direction::Right, Direction::Down, Direction::Left];
